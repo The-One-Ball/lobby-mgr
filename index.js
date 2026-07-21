@@ -25,8 +25,50 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once("ready", () => {
+client.once("ready", async () => {
   console.log(`Bot is online as ${client.user.tag}`);
+
+  const lobbies = lobbyManager.loadLobbies();
+
+  for (const hostId in lobbies) {
+    const lobby = lobbies[hostId];
+
+    // Skip lobbies missing message/channel IDs
+    if (!lobby.messageId || !lobby.channelId) continue;
+
+    try {
+      const channel = await client.channels.fetch(lobby.channelId);
+      const message = await channel.messages.fetch(lobby.messageId);
+
+      const embed = new EmbedBuilder()
+        .setTitle(`${lobby.hostName}'s Lobby`)
+        .setDescription(`Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}`)
+        .setColor("Orange");
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`join_${hostId}`)
+          .setLabel("Join Lobby")
+          .setStyle(ButtonStyle.Success),
+
+        new ButtonBuilder()
+          .setCustomId(`leave_${hostId}`)
+          .setLabel("Leave Lobby")
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+          .setCustomId(`close_${hostId}`)
+          .setLabel("Close Lobby")
+          .setStyle(ButtonStyle.Danger)
+      );
+
+      await message.edit({ embeds: [embed], components: [row] });
+
+      console.log(`Restored lobby for ${lobby.hostName}`);
+    } catch (err) {
+      console.error(`Failed to restore lobby for ${lobby.hostName}:`, err);
+    }
+  }
 });
 
 client.on("interactionCreate", async interaction => {
