@@ -1,0 +1,15 @@
+{
+  "name": "lobby-mgr",
+  "version": "1.0.0",
+  "description": "Among Us Lobby Manager Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "discord.js": "^14.14.1",
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  }
+}
