@@ -13,12 +13,10 @@ module.exports = {
 
   async execute(interaction) {
     const hostId = interaction.user.id;
-    const hostName = interaction.user.username;
-
     const player = interaction.options.getUser("player");
     const playerName = player.username;
 
-    const result = lobbyManager.addPlayerToLobby(hostId, playerName);
+    const result = lobbyManager.joinLobby(hostId, playerName);
 
     if (result.error) {
       return interaction.reply({ content: result.error, ephemeral: true });

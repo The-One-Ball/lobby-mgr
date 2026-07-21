@@ -62,7 +62,10 @@ client.on("interactionCreate", async interaction => {
 
       const embed = new EmbedBuilder()
         .setTitle(`${lobby.hostName}'s Lobby`)
-        .setDescription(`Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}`)
+        .setDescription(
+  `Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}` +
+  (lobby.code ? `\n\n**Game Code:** ${lobby.code}` : "")
+)
         .setColor("Orange");
 
       return interaction.update({ embeds: [embed] });

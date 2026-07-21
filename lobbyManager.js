@@ -32,6 +32,7 @@ function createLobby(hostId, hostName) {
     hostId,
     hostName,
     players: [hostName],
+    code: null,
     createdAt: Date.now()
   };
 
@@ -90,11 +91,37 @@ function closeLobby(hostId) {
   return { success: true };
 }
 
+function attachMessage(hostId, messageId, channelId) {
+  const lobbies = loadLobbies();
+
+  if (!lobbies[hostId]) return;
+
+  lobbies[hostId].messageId = messageId;
+  lobbies[hostId].channelId = channelId;
+
+  saveLobbies(lobbies);
+}
+
+function setCode(hostId, code) {
+  const lobbies = loadLobbies();
+
+  if (!lobbies[hostId]) {
+    return { error: "You do not have an active lobby." };
+  }
+
+  lobbies[hostId].code = code;
+  saveLobbies(lobbies);
+
+  return { success: true, lobby: lobbies[hostId] };
+}
+
 module.exports = {
   loadLobbies,
   saveLobbies,
   createLobby,
   joinLobby,
   leaveLobby,
-  closeLobby
+  closeLobby,
+  attachMessage,
+  setCode
 };

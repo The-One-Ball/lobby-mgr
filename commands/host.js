@@ -41,9 +41,16 @@ module.exports = {
         .setStyle(ButtonStyle.Danger)
     );
 
-    return interaction.reply({
+    const sentMessage = await interaction.reply({
       embeds: [embed],
-      components: [row]
+      components: [row],
+      fetchReply: true
     });
+
+    lobbyManager.attachMessage(
+      hostId,
+      sentMessage.id,
+      sentMessage.channel.id
+    );
   }
 };
