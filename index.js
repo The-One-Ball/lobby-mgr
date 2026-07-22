@@ -70,23 +70,40 @@ client.on(Events.MessageCreate, async (message) => {
     let reply;
 
     // SECRET COMMANDS
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith('!')) return;
+
+  const [cmd] = message.content.slice(1).split(/\s+/);
+
+  try {
+    // Delete user command immediately
+    message.delete().catch(() => {});
+
+    let reply;
+
+    // REGISTER COMMANDS (GLOBAL)
     if (cmd === 'registercommands') {
-      reply = await message.channel.send('All commands registered');
+      await client.application.commands.set(client.commands.map(cmd => cmd.data));
+      reply = await message.channel.send('All slash commands registered globally.');
     }
 
+    // PURGE COMMANDS (GLOBAL)
     if (cmd === 'purgecommands') {
-      reply = await message.channel.send('All commands purged');
+      await client.application.commands.set([]);
+      reply = await message.channel.send('All slash commands purged globally.');
     }
 
+    // CLOSE ALL LOBBIES (GLOBAL)
     if (cmd === 'sleepau') {
-      reply = await message.channel.send('All lobbies closed');
+      lobbyManager.closeAllLobbies();
+
+      reply = await message.channel.send('All lobbies closed globally.');
     }
 
-    // Auto-delete the bot's reply after 10 seconds
+    // Auto-delete bot reply after 10 seconds
     if (reply) {
-      setTimeout(() => {
-        reply.delete().catch(() => {});
-      }, 10000);
+      setTimeout(() => reply.delete().catch(() => {}), 10000);
     }
 
   } catch (err) {
