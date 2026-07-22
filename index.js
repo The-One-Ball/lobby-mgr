@@ -1,149 +1,97 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
+require('dotenv').config();
 
-require("dotenv").config();
-const fs = require("fs");
-const path = require("path");
-const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const lobbyManager = require('./lobbyManager');
+const buttons = require('./buttons');
 
-// ⭐ THIS WAS MISSING ⭐
-const lobbyManager = require("./lobbyManager");
-
+// Create client
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
   ]
 });
 
+// Load commands
 client.commands = new Collection();
+const fs = require('fs');
+const path = require('path');
 
-const commandsPath = path.join(__dirname, "commands");
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = require(filePath);
+  const command = require(`./commands/${file}`);
   client.commands.set(command.data.name, command);
 }
 
-client.once("ready", async () => {
-  console.log(`Bot is online as ${client.user.tag}`);
+// Interaction handler
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+    if (interaction.isChatInputCommand()) {
+      const command = client.commands.get(interaction.commandName);
+      if (!command) return;
 
-  const lobbies = lobbyManager.loadLobbies();
-
-  for (const hostId in lobbies) {
-    const lobby = lobbies[hostId];
-
-    // Skip lobbies missing message/channel IDs
-    if (!lobby.messageId || !lobby.channelId) continue;
-
-    try {
-      const channel = await client.channels.fetch(lobby.channelId);
-      const message = await channel.messages.fetch(lobby.messageId);
-
-      const embed = new EmbedBuilder()
-        .setTitle(`${lobby.hostName}'s Lobby`)
-        .setDescription(`Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}`)
-        .setColor("Orange");
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`join_${hostId}`)
-          .setLabel("Join Lobby")
-          .setStyle(ButtonStyle.Success),
-
-        new ButtonBuilder()
-          .setCustomId(`leave_${hostId}`)
-          .setLabel("Leave Lobby")
-          .setStyle(ButtonStyle.Secondary),
-
-        new ButtonBuilder()
-          .setCustomId(`close_${hostId}`)
-          .setLabel("Close Lobby")
-          .setStyle(ButtonStyle.Danger)
-      );
-
-      await message.edit({ embeds: [embed], components: [row] });
-
-      console.log(`Restored lobby for ${lobby.hostName}`);
-    } catch (err) {
-      console.error(`Failed to restore lobby for ${lobby.hostName}:`, err);
+      await command.execute(interaction, lobbyManager);
     }
+
+    if (interaction.isButton()) {
+      await buttons.execute(interaction, lobbyManager);
+    }
+  } catch (err) {
+    console.error('Interaction error:', err);
   }
 });
 
-client.on("interactionCreate", async interaction => {
-  // ⭐ Slash commands
-  if (interaction.isChatInputCommand()) {
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+// Secret commands
+// Secret commands
+client.on(Events.MessageCreate, async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith('!')) return;
 
-    try {
-      await command.execute(interaction);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        content: "There was an error executing this command.",
-        ephemeral: true
-      });
-    }
-  }
+  const [cmd] = message.content.slice(1).split(/\s+/);
 
-  // ⭐ Buttons
-  if (interaction.isButton()) {
-    const [action, hostId] = interaction.customId.split("_");
-    const playerName = interaction.user.username;
+  try {
+    // Delete the user's command message IMMEDIATELY
+    message.delete().catch(() => {});
 
-    if (action === "join") {
-      const result = lobbyManager.joinLobby(hostId, playerName);
+    let reply;
 
-      if (result.error) {
-        return interaction.reply({ content: result.error, ephemeral: true });
-      }
-
-      const lobby = result.lobby;
-
-      const embed = new EmbedBuilder()
-        .setTitle(`${lobby.hostName}'s Lobby`)
-        .setDescription(
-  `Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}` +
-  (lobby.code ? `\n\n**Game Code:** ${lobby.code}` : "")
-)
-        .setColor("Orange");
-
-      return interaction.update({ embeds: [embed] });
+    // SECRET COMMANDS
+    if (cmd === 'registercommands') {
+      reply = await message.channel.send('All commands registered');
     }
 
-    if (action === "leave") {
-      const result = lobbyManager.leaveLobby(hostId, playerName);
-
-      if (result.error) {
-        return interaction.reply({ content: result.error, ephemeral: true });
-      }
-
-      const lobby = result.lobby;
-
-      const embed = new EmbedBuilder()
-        .setTitle(`${lobby.hostName}'s Lobby`)
-        .setDescription(`Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}`)
-        .setColor("Orange");
-
-      return interaction.update({ embeds: [embed] });
+    if (cmd === 'purgecommands') {
+      reply = await message.channel.send('All commands purged');
     }
 
-    if (action === "close") {
-      const result = lobbyManager.closeLobby(hostId);
-
-      if (result.error) {
-        return interaction.reply({ content: result.error, ephemeral: true });
-      }
-
-      return interaction.update({
-        content: "This lobby has been closed.",
-        embeds: [],
-        components: []
-      });
+    if (cmd === 'sleepau') {
+      reply = await message.channel.send('All lobbies closed');
     }
+
+    // Auto-delete the bot's reply after 10 seconds
+    if (reply) {
+      setTimeout(() => {
+        reply.delete().catch(() => {});
+      }, 10000);
+    }
+
+  } catch (err) {
+    console.error('Secret command error:', err);
   }
 });
 
+// Bot online DM
+client.once('ready', async () => {
+  try {
+    const owner = await client.users.fetch('1330655332585701589');
+    await owner.send('Lobby Manager Bot is now online.');
+  } catch (err) {
+    console.log('DM to owner failed:', err);
+  }
+});
+
+// SINGLE login call (important!)
 client.login(process.env.TOKEN);

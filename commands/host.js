@@ -1,56 +1,45 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const lobbyManager = require("../lobbyManager");
+const { SlashCommandBuilder } = require('discord.js');
+const { buildLobbyEmbed, buildLobbyComponents } = require('../embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("host")
-    .setDescription("Create a new Among Us lobby"),
+    .setName('host')
+    .setDescription('Create an Among Us lobby')
+    .addStringOption(opt =>
+      opt.setName('code')
+        .setDescription('6-character lobby code')
+        .setRequired(true))
+    .addIntegerOption(opt =>
+      opt.setName('capacity')
+        .setDescription('Lobby capacity (1–15)')
+        .setRequired(true)
+    ),
 
-  async execute(interaction) {
-    const hostId = interaction.user.id;
-    const hostName = interaction.user.username;
+  async execute(interaction, lobbyManager) {
+    const code = interaction.options.getString('code').toUpperCase();
+    const capacity = interaction.options.getInteger('capacity');
 
-    const result = lobbyManager.createLobby(hostId, hostName);
+    await interaction.deferReply();
 
-    if (result.error) {
-      return interaction.reply({ content: result.error, ephemeral: true });
-    }
-
-    const lobby = result.lobby;
-
-    const embed = new EmbedBuilder()
-      .setTitle(`${hostName}'s Lobby`)
-      .setDescription(`Players:\n${lobby.players.map(p => `• ${p}`).join("\n")}`)
-      .setColor("Orange")
-      .setFooter({ text: "Among Us Lobby Manager" });
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`join_${hostId}`)
-        .setLabel("Join Lobby")
-        .setStyle(ButtonStyle.Success),
-
-      new ButtonBuilder()
-        .setCustomId(`leave_${hostId}`)
-        .setLabel("Leave Lobby")
-        .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-        .setCustomId(`close_${hostId}`)
-        .setLabel("Close Lobby")
-        .setStyle(ButtonStyle.Danger)
-    );
-
-    const sentMessage = await interaction.reply({
-      embeds: [embed],
-      components: [row],
-      fetchReply: true
+    const lobby = lobbyManager.createLobby({
+      guildId: interaction.guildId,
+      channelId: interaction.channelId,
+      hostId: interaction.user.id,
+      hostName: interaction.user.username,
+      code,
+      capacity
     });
 
-    lobbyManager.attachMessage(
-      hostId,
-      sentMessage.id,
-      sentMessage.channel.id
-    );
+    const embed = buildLobbyEmbed(lobby);
+    const components = buildLobbyComponents(lobby);
+
+    const msg = await interaction.editReply({
+      embeds: [embed],
+      components
+    });
+
+    lobby.messageId = msg.id;
+
+    await interaction.channel.send(`@everyone Lobby One: ${code}`);
   }
 };

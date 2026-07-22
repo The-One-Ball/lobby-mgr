@@ -2,11 +2,11 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('add')
-    .setDescription('Add a player to the lobby')
+    .setName('transferhost')
+    .setDescription('Transfer lobby host to another player')
     .addUserOption(opt =>
       opt.setName('player')
-        .setDescription('Player to add')
+        .setDescription('New host')
         .setRequired(true)
     )
     .addStringOption(opt =>
@@ -16,7 +16,7 @@ module.exports = {
     ),
 
   async execute(interaction, lobbyManager) {
-    const player = interaction.options.getUser('player');
+    const newHost = interaction.options.getUser('player');
     const lobbyId = interaction.options.getString('lobby');
 
     const lobby = lobbyManager.getLobby(lobbyId);
@@ -25,14 +25,12 @@ module.exports = {
     }
 
     if (interaction.user.id !== lobby.hostId) {
-      return interaction.reply({ content: 'Only the host can add players.', ephemeral: true });
+      return interaction.reply({ content: 'Only the current host can transfer ownership.', ephemeral: true });
     }
 
-    if (!lobby.players.includes(player.id)) {
-      lobby.players.push(player.id);
-      lobby.currentCount = lobby.players.length;
-    }
+    lobby.hostId = newHost.id;
+    lobby.hostName = newHost.username;
 
-    return interaction.reply({ content: `Added ${player.username} to lobby ${lobby.code}.`, ephemeral: true });
+    return interaction.reply({ content: `Host transferred to ${newHost.username}.`, ephemeral: true });
   }
 };
