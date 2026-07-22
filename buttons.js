@@ -104,24 +104,58 @@ module.exports = {
     }
 
     // ---------------------------
-    // CLOSE → Close lobby + clear players/queue + red embed + message
+    // CLOSE → Host-only, safe, no timeouts
     // ---------------------------
     if (action === 'close') {
-      lobby.status = 'closed';
-      lobby.players = [];
-      lobby.queue = [];
-      lobby.currentCount = 0;
+      try {
+        // Host-only protection
+        if (interaction.user.id !== lobby.hostId) {
+          return interaction.reply({
+            content: "Only the host can close the lobby.",
+            ephemeral: true
+          });
+        }
 
-      const embed = buildLobbyEmbed(lobby);
-      const msg = await interaction.channel.messages.fetch(lobby.messageId);
+        // Update lobby state
+        lobby.status = 'closed';
+        lobby.players = [];
+        lobby.queue = [];
+        lobby.currentCount = 0;
 
-      await msg.edit({
-        content: `Thank you for playing! This lobby is now **closed**.`,
-        embeds: [embed],
-        components: [] // remove buttons
-      });
+        const embed = buildLobbyEmbed(lobby);
 
-      return interaction.deferUpdate();
+        // Try to update the lobby message safely
+        try {
+          const msg = await interaction.channel.messages.fetch(lobby.messageId);
+          await msg.edit({
+            content: `Thank you for playing! This lobby is now **closed**.`,
+            embeds: [embed],
+            components: []
+          });
+        } catch (err) {
+          console.error("Failed to edit lobby message:", err);
+
+          // Still respond so Discord doesn't timeout
+          return interaction.reply({
+            content: "Lobby closed, but I couldn't update the message due to missing permissions.",
+            ephemeral: true
+          });
+        }
+
+        // Successful close
+        return interaction.reply({
+          content: `Lobby ${lobby.code} has been closed.`,
+          ephemeral: true
+        });
+
+      } catch (err) {
+        console.error("Close button error:", err);
+
+        return interaction.reply({
+          content: "An unexpected error occurred while closing the lobby.",
+          ephemeral: true
+        });
+      }
     }
 
     // ---------------------------
