@@ -1,4 +1,3 @@
-// KEEP-ALIVE SERVER FOR RENDER
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv').config();
 
@@ -56,20 +55,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Secret commands
-client.on(Events.MessageCreate, async (message) => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith('!')) return;
-
-  const [cmd] = message.content.slice(1).split(/\s+/);
-
-  try {
-    // Delete the user's command message IMMEDIATELY
-    message.delete().catch(() => {});
-
-    let reply;
-
-    // SECRET COMMANDS
+// SECRET COMMANDS (GLOBAL)
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
   if (!message.content.startsWith('!')) return;
@@ -84,7 +70,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     // REGISTER COMMANDS (GLOBAL)
     if (cmd === 'registercommands') {
-      await client.application.commands.set(client.commands.map(cmd => cmd.data));
+      await client.application.commands.set(client.commands.map(c => c.data));
       reply = await message.channel.send('All slash commands registered globally.');
     }
 
@@ -97,7 +83,6 @@ client.on(Events.MessageCreate, async (message) => {
     // CLOSE ALL LOBBIES (GLOBAL)
     if (cmd === 'sleepau') {
       lobbyManager.closeAllLobbies();
-
       reply = await message.channel.send('All lobbies closed globally.');
     }
 
