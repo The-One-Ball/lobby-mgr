@@ -12,10 +12,8 @@ app.listen(3000);
 
 // SELF-PING TO PREVENT RENDER HIBERNATION
 setInterval(() => {
-  fetch(https://lobby-mgr.onrender.com)
-    .catch(() => {});
-}, 1000 * 60 * 5); // every 5 minutes
-
+  fetch(https://lobby-mgr.onrender.com).catch(() => {});
+}, 1000 * 60 * 5);
 
 // Create client
 const client = new Client({
