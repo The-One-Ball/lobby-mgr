@@ -16,12 +16,16 @@ setInterval(() => {
 }, 1000 * 60 * 5); // every 5 minutes
 
 // Create client
+// Create client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMessageReactions
+  ],
+  partials: ['CHANNEL'] // required for DM deletion + message deletion in DMs
 });
 
 // Load commands
