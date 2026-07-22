@@ -4,6 +4,19 @@ require('dotenv').config();
 const lobbyManager = require('./lobbyManager');
 const buttons = require('./buttons');
 
+// KEEP-ALIVE SERVER FOR RENDER
+const express = require('express');
+const app = express();
+app.get('/', (req, res) => res.send('Bot is running'));
+app.listen(3000);
+
+// SELF-PING TO PREVENT RENDER HIBERNATION
+setInterval(() => {
+  fetch(https://lobby-mgr.onrender.com)
+    .catch(() => {});
+}, 1000 * 60 * 5); // every 5 minutes
+
+
 // Create client
 const client = new Client({
   intents: [
@@ -44,7 +57,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Secret commands
 // Secret commands
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot) return;
