@@ -5,6 +5,13 @@ const lobbyManager = require('./lobbyManager');
 const buttons = require('./buttons');
 
 // KEEP-ALIVE SERVER FOR RENDER
+const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
+require('dotenv').config();
+
+const lobbyManager = require('./lobbyManager');
+const buttons = require('./buttons');
+
+// KEEP-ALIVE SERVER FOR RENDER
 const express = require('express');
 const app = express();
 app.get('/', (req, res) => res.send('Bot is running'));
@@ -12,8 +19,8 @@ app.listen(3000);
 
 // SELF-PING TO PREVENT RENDER HIBERNATION
 setInterval(() => {
-  fetch(https://lobby-mgr.onrender.com).catch(() => {});
-}, 1000 * 60 * 5);
+  fetch(process.env.RENDER_EXTERNAL_URL).catch(() => {});
+}, 1000 * 60 * 5); // every 5 minutes
 
 // Create client
 const client = new Client({
