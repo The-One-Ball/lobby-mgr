@@ -120,6 +120,45 @@ if (cmd === 'sleepau') {
 
   reply = await message.channel.send('All lobbies closed globally.');
 }
+// FORCE BOT TO LEAVE SERVER + CLEANUP
+if (cmd === 'forceleave') {
+  // Only allow the owner to run this
+  if (message.author.id !== process.env.OWNER_ID) {
+    reply = await message.channel.send("You don't have permission to run this command.");
+  } else {
+    try {
+      // Delete all lobby messages in this guild
+      for (const lobby of lobbyManager.getAllLobbies()) {
+        if (lobby.guildId === message.guild.id) {
+          try {
+            const guild = await client.guilds.fetch(lobby.guildId);
+            const channel = await guild.channels.fetch(lobby.channelId);
+            const msg = await channel.messages.fetch(lobby.messageId);
+
+            await msg.delete().catch(() => {});
+          } catch (err) {
+            console.error("Failed to delete lobby message:", err);
+          }
+        }
+      }
+
+      // Remove all lobbies from memory for this guild
+      for (const lobby of lobbyManager.getAllLobbies()) {
+        if (lobby.guildId === message.guild.id) {
+          lobbyManager.lobbies.delete(lobby.id);
+        }
+      }
+
+      reply = await message.channel.send("Cleaning complete. Leaving server...");
+      
+      // Leave the server
+      await message.guild.leave();
+    } catch (err) {
+      console.error("Force leave error:", err);
+      reply = await message.channel.send("Error while leaving server.");
+    }
+  }
+}
 
     // Auto-delete bot reply after 10 seconds
     if (reply) {
