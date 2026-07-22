@@ -85,10 +85,41 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     // CLOSE ALL LOBBIES (GLOBAL)
-    if (cmd === 'sleepau') {
-      lobbyManager.closeAllLobbies();
-      reply = await message.channel.send('All lobbies closed globally.');
+if (cmd === 'sleepau') {
+  lobbyManager.closeAllLobbies();
+
+  for (const lobby of lobbyManager.getAllLobbies()) {
+    try {
+      const guild = await client.guilds.fetch(lobby.guildId);
+      const channel = await guild.channels.fetch(lobby.channelId);
+      const msg = await channel.messages.fetch(lobby.messageId);
+
+      // Build CLOSED embed
+      const embed = {
+        title: 'Among Us Lobby',
+        color: 0xff0000,
+        fields: [
+          { name: 'Status', value: '🔴 CLOSED' },
+          { name: 'Host', value: `<@${lobby.hostId}>` },
+          { name: 'Code', value: lobby.code },
+          { name: 'Lobby Members', value: '(closed)' },
+          { name: 'Queue', value: '(closed)' }
+        ]
+      };
+
+      await msg.edit({
+        content: 'Thank you for playing! This lobby is now closed.',
+        embeds: [embed],
+        components: [] // remove all buttons
+      });
+
+    } catch (err) {
+      console.error('Failed to close lobby:', err);
     }
+  }
+
+  reply = await message.channel.send('All lobbies closed globally.');
+}
 
     // Auto-delete bot reply after 10 seconds
     if (reply) {
