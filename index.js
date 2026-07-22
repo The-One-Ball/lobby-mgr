@@ -1,9 +1,3 @@
-const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
-require('dotenv').config();
-
-const lobbyManager = require('./lobbyManager');
-const buttons = require('./buttons');
-
 // KEEP-ALIVE SERVER FOR RENDER
 const { Client, Events, GatewayIntentBits, Collection } = require('discord.js');
 require('dotenv').config();
