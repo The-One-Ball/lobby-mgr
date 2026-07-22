@@ -30,6 +30,15 @@ class LobbyManager {
     return this.lobbies.get(String(id)) || null;
   }
 
+  getLobbyByHost(hostId) {
+    for (const lobby of this.lobbies.values()) {
+      if (lobby.hostId === hostId && lobby.status === 'open') {
+        return lobby;
+      }
+    }
+    return null;
+  }
+
   getAllLobbies() {
     return Array.from(this.lobbies.values());
   }
