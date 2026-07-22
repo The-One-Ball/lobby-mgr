@@ -29,6 +29,19 @@ class LobbyManager {
   getLobby(id) {
     return this.lobbies.get(String(id)) || null;
   }
+
+  getAllLobbies() {
+    return Array.from(this.lobbies.values());
+  }
+
+  closeAllLobbies() {
+    for (const lobby of this.lobbies.values()) {
+      lobby.status = 'closed';
+      lobby.players = [];
+      lobby.queue = [];
+      lobby.currentCount = 0;
+    }
+  }
 }
 
 module.exports = new LobbyManager();
