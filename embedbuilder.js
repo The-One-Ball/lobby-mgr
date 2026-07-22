@@ -8,9 +8,9 @@ const {
 function buildLobbyEmbed(lobby) {
   const isClosed = lobby.status === 'closed';
 
-  const color = isClosed ? 0xff0000 : 0x00ff00;     // red when closed
-  const circle = isClosed ? '🔴' : '🟢';             // red dot when closed
-  const statusText = isClosed ? 'CLOSED' : 'OPEN';   // CLOSED label
+  const color = isClosed ? 0xff0000 : 0x00ff00;
+  const circle = isClosed ? '🔴' : '🟢';
+  const statusText = isClosed ? 'CLOSED' : 'OPEN';
 
   const membersList = lobby.players.length
     ? lobby.players.map(id => `<@${id}>`).join('\n')
@@ -25,26 +25,19 @@ function buildLobbyEmbed(lobby) {
   return new EmbedBuilder()
     .setColor(color)
     .setTitle('Among Us Lobby')
-    .addFields(
-      {
-        name: 'Lobby Code',
-        value: `\`${lobby.code}\``,
-        inline: true
-      }
-    )
     .setDescription(
-      `${circle} **${statusText}**\n` +                     // shows CLOSED with red dot
+      `${circle} **${statusText}**\n` +
       `👑 Host: <@${lobby.hostId}>\n` +
       `**Code:** ${lobby.code}\n\n` +
       `**Lobby Members (${lobby.currentCount}/${lobby.capacity}):**\n${membersList}\n\n` +
       `**Queue (${lobby.queue.length}):**\n${queueList}` +
-      closedMessage                                         // Thank you for playing
+      closedMessage
     );
 }
 
 function buildLobbyComponents(lobby) {
   if (lobby.status === 'closed') {
-    return []; // no buttons when closed
+    return [];
   }
 
   return [
