@@ -84,9 +84,9 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 // Bot online DM
-client.once('ready', async () => {
+client.once(Events.ClientReady, async () => {
   try {
-    const owner = await client.users.fetch('1330655332585701589');
+    const owner = await client.users.fetch(process.env.OWNER_ID);
     await owner.send('Lobby Manager Bot is now online.');
   } catch (err) {
     console.log('DM to owner failed:', err);
